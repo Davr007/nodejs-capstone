@@ -1,11 +1,12 @@
 /*jshint esversion: 8 */
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const pinoLogger = require('./logger');
+import 'dotenv/config'
+import express from 'express';
+import cors from 'cors';
+import pinoLogger from './logger.js';
 
-const connectToDatabase = require('./models/db');
-const {loadData} = require("./util/import-mongo/index");
+import connectToDatabase from './models/db.js';
+import {loadData} from "./util/import-mongo/index.js";
+import secondChanceItemsRoutes from './routes/secondChanceItemsRoutes.js';
 
 
 const app = express();
@@ -14,6 +15,8 @@ const port = 3060;
 
 // Connect to MongoDB; we just do this one time
 connectToDatabase().then(() => {
+    return loadData();
+}).then(() => {
     pinoLogger.info('Connected to DB');
 })
     .catch((e) => console.error('Failed to connect to DB', e));
@@ -33,8 +36,8 @@ app.use(express.json());
 //{{insert code here}}
 
 
-const pinoHttp = require('pino-http');
-const logger = require('./logger');
+import pinoHttp from 'pino-http';
+import logger from './logger.js';
 
 app.use(pinoHttp({ logger }));
 
@@ -58,6 +61,8 @@ app.use((err, req, res, next) => {
 app.get("/",(req,res)=>{
     res.send("Inside the server")
 })
+
+app.use('/api/secondchance/items', secondChanceItemsRoutes)
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

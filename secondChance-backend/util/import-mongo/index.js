@@ -1,6 +1,14 @@
-require('dotenv').config();
-const MongoClient = require('mongodb').MongoClient;
-const fs = require('fs');
+import 'dotenv/config';
+import mongodb from 'mongodb'
+const MongoClient = mongodb.MongoClient;
+import fs from 'fs';
+import path from 'path'
+import {fileURLToPath} from "url";
+import connectToDatabase from "../../models/db.js";
+
+
+const __fileName = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__fileName);
 
 // MongoDB connection URL with authentication options
 let url = `${process.env.MONGO_URL}`;
@@ -13,15 +21,11 @@ const data = JSON.parse(fs.readFileSync(filename, 'utf8')).docs;
 
 // connect to database and insert data into the collection
 async function loadData() {
-    const client = new MongoClient(url);
 
     try {
         // Connect to the MongoDB client
-        await client.connect();
+        const db = await connectToDatabase();
         console.log("Connected successfully to server");
-
-        // database will be created if it does not exist
-        const db = client.db(dbName);
 
         // collection will be created if it does not exist
         const collection = db.collection(collectionName);
@@ -37,14 +41,7 @@ async function loadData() {
         }
     } catch (err) {
         console.error(err);
-    } finally {
-        // Close the connection
-        await client.close();
     }
 }
 
-loadData();
-
-module.exports = {
-    loadData,
-  };
+export {loadData};
