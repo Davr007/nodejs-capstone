@@ -7,6 +7,7 @@ import pinoLogger from './logger.js';
 import connectToDatabase from './models/db.js';
 import {loadData} from "./util/import-mongo/index.js";
 import secondChanceItemsRoutes from './routes/secondChanceItemsRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 
 const app = express();
@@ -62,7 +63,8 @@ app.get("/",(req,res)=>{
     res.send("Inside the server")
 })
 
-app.use('/api/secondchance/items', secondChanceItemsRoutes)
+app.use('/api/secondchance/items', secondChanceItemsRoutes);
+app.use('/api/secondchance/search', searchRoutes);
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

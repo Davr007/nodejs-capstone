@@ -2,16 +2,16 @@
   "name": "giftlink-backend",
   "version": "1.0.0",
   "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "mocha",
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
-  "keywords": [],
-  "type": "module",
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
