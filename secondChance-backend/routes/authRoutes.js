@@ -4,12 +4,34 @@ import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 import logger from "../logger.js";
 import "dotenv/config"
+import {body, validationResult} from "express-validator";
 
 import connectToDatabase from "../models/db.js";
 const JWT_SECRET = process.env.secret_key;
 
 
-router.post("/register", async (req, res) => {
+router.post(
+    "/register",
+    [
+        body("firstName")
+            .trim()
+            .notEmpty().withMessage("First name is required"),
+        body("lastName")
+            .trim()
+            .notEmpty().withMessage("Last name is required"),
+        body("email")
+            .isEmail().withMessage("Valid email is required")
+            .normalizeEmail(),
+        body("password")
+            .trim()
+            .notEmpty().withMessage("Password is required")
+    ],
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            logger.error("Validation failed in register user")
+            return res.status(400).json({ errors: errors.array() });
+        }
     try {
         const db = await connectToDatabase();
         const collection = db.collection("users");
@@ -83,6 +105,53 @@ router.post("/login", async (req, res) => {
 
     } catch (e) {
         logger.error("User login failed")
+        res.status(500).json({ message: "Internal error" });
+    }
+})
+
+router.put("/update", async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.error("Validation failed in update user")
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+        const email = req.headers.email;
+        if(!email) {
+            logger.error("Email not found in request headers")
+            return res.status(400).json({ message: "Email not found in request headers" });
+        }
+
+        const db = await connectToDatabase();
+        const collection = db.collection("users");
+        const existingUser = await collection.findOne({ email: email });
+        if (!existingUser) {
+            logger.error("User not found")
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        let updates = {}
+
+        if (req.body.firstName) updates.firstName = req.body.firstName;
+        if (req.body.lastName) updates.lastName = req.body.lastName;
+        if (req.body.password) updates.password = req.body.password;
+        updates.updatedAt = new Date();
+
+        const updatedUser = await collection.findOneAndUpdate({ email }, { $set: updates }, { returnDocument: "after" });
+
+        const payload = {
+            user: {
+                id: updatedUser._id.toString()
+            }
+        }
+        const authToken = jwt.sign(payload, JWT_SECRET)
+        logger.info("User updated successfully")
+        res.json({authToken, updatedUser});
+
+    } catch (e) {
+        logger.error(e);
         res.status(500).json({ message: "Internal error" });
     }
 })
