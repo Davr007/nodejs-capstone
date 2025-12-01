@@ -1,12 +1,11 @@
-/*jshint esversion: 8 */
-import 'dotenv/config'
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pinoHttp from 'pino-http';
 
 import logger from './logger.js';
 import connectToDatabase from './models/db.js';
-import {loadData} from "./util/import-mongo/index.js";
+import {loadData} from './util/import-mongo/index.js';
 
 import secondChanceItemsRoutes from './routes/secondChanceItemsRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';

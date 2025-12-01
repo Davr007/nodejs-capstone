@@ -1,10 +1,12 @@
 module.exports = {
   env: {
-    browser: true,
-    commonjs: true,
+    node: true,
     es2021: true
   },
-  extends: 'standard',
+  extends: [
+    'eslint:recommended',
+    'plugin:prettier/recommended'
+  ],
   overrides: [
     {
       env: {
@@ -22,5 +24,21 @@ module.exports = {
     ecmaVersion: 'latest'
   },
   rules: {
+    // Полезные строгие правила:
+    'no-unused-vars': 'error',
+    'no-undef': 'error',
+    'no-console': 'off',
+    'no-empty': 'warn',
+    'no-extra-semi': 'warn',
+    'no-multiple-empty-lines': ['warn', { max: 2 }],
+    'prefer-const': 'error',
+
+    // Backend safety
+    'no-return-await': 'off',
+    'no-await-in-loop': 'warn',
+
+    // Промисы
+    'no-promise-executor-return': 'off',
+    'no-useless-catch': 'warn',
   }
 }
