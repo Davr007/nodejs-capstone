@@ -7,31 +7,11 @@ import "dotenv/config"
 import {body, validationResult} from "express-validator";
 
 import connectToDatabase from "../models/db.js";
-const JWT_SECRET = process.env.secret_key;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 
 router.post(
-    "/register",
-    [
-        body("firstName")
-            .trim()
-            .notEmpty().withMessage("First name is required"),
-        body("lastName")
-            .trim()
-            .notEmpty().withMessage("Last name is required"),
-        body("email")
-            .isEmail().withMessage("Valid email is required")
-            .normalizeEmail(),
-        body("password")
-            .trim()
-            .notEmpty().withMessage("Password is required")
-    ],
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            logger.error("Validation failed in register user")
-            return res.status(400).json({ errors: errors.array() });
-        }
+    "/register", async (req, res) => {
     try {
         const db = await connectToDatabase();
         const collection = db.collection("users");
@@ -60,11 +40,11 @@ router.post(
             }
         };
 
-        const authToken = jwt.sign(payload, JWT_SECRET)
+        const authtoken = jwt.sign(payload, JWT_SECRET)
 
         logger.info("User signed successfully")
 
-        res.json({authToken, email});
+        res.json({authtoken, email});
 
     } catch (e) {
         logger.error("User registration failed")
@@ -94,10 +74,10 @@ router.post("/login", async (req, res) => {
                     id: user._id.toString(),
                 }
             }
-            const authToken = jwt.sign(payload, JWT_SECRET)
+            const authtoken = jwt.sign(payload, JWT_SECRET)
 
             logger.info("User logged in successfully")
-            res.json({authToken, userName, email});
+            res.json({authtoken, userName, email});
         } else {
             logger.error("User not found")
             return res.status(404).json({ message: "User not found" });
