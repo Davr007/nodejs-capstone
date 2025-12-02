@@ -1,19 +1,15 @@
 import 'dotenv/config';
-import mongodb from 'mongodb'
-const MongoClient = mongodb.MongoClient;
 import fs from 'fs';
-import path from 'path'
-import {fileURLToPath} from "url";
-import connectToDatabase from "../../models/db.js";
+import path from 'path';
+import {fileURLToPath} from 'url';
+import connectToDatabase from '../../models/db.js';
 
 
 const __fileName = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__fileName);
 
 // MongoDB connection URL with authentication options
-let url = `${process.env.MONGO_URL}`;
 let filename = `${__dirname}/secondChanceItems.json`;
-const dbName = 'secondChance';
 const collectionName = 'secondChanceItems';
 
 // notice you have to load the array of items into the data object
@@ -22,26 +18,26 @@ const data = JSON.parse(fs.readFileSync(filename, 'utf8')).docs;
 // connect to database and insert data into the collection
 async function loadData() {
 
-    try {
-        // Connect to the MongoDB client
-        const db = await connectToDatabase();
-        console.log("Connected successfully to server");
+  try {
+    // Connect to the MongoDB client
+    const db = await connectToDatabase();
+    console.log('Connected successfully to server');
 
-        // collection will be created if it does not exist
-        const collection = db.collection(collectionName);
-        let cursor = await collection.find({});
-        let documents = await cursor.toArray();
+    // collection will be created if it does not exist
+    const collection = db.collection(collectionName);
+    let cursor = await collection.find({});
+    let documents = await cursor.toArray();
 
-        if(documents.length == 0) {
-            // Insert data into the collection
-            const insertResult = await collection.insertMany(data);
-            console.log('Inserted documents:', insertResult.insertedCount);
-        } else {
-            console.log("Items already exists in DB")
-        }
-    } catch (err) {
-        console.error(err);
+    if(documents.length == 0) {
+      // Insert data into the collection
+      const insertResult = await collection.insertMany(data);
+      console.log('Inserted documents:', insertResult.insertedCount);
+    } else {
+      console.log('Items already exists in DB');
     }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 export {loadData};

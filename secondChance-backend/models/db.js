@@ -1,8 +1,6 @@
 // db.js
-import 'dotenv/config'
-import mongodb from 'mongodb';
-const MongoClient = mongodb.MongoClient;
-import mongoose from 'mongoose'
+import 'dotenv/config';
+import mongoose from 'mongoose';
 
 // MongoDB connection URL with authentication options
 let url = `${process.env.MONGO_URL}`;
@@ -12,37 +10,37 @@ const dbName = `${process.env.MONGO_DB}`;
 
 async function connectToDatabase() {
 
-    if (dbInstance){
-        return dbInstance
-    }
+  if (dbInstance){
+    return dbInstance;
+  }
 
-    try {
-        await mongoose.connect(url, {
-            dbName: dbName,
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+  try {
+    await mongoose.connect(url, {
+      dbName: dbName,
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
 
-        dbInstance = mongoose.connection.db;
+    dbInstance = mongoose.connection.db;
 
-        return dbInstance
+    return dbInstance;
 
-    } catch (e) {
-        console.error(e)
-    }
-
-
-
-    // Task 1: Connect to MongoDB
-    // {{insert code}}
+  } catch (e) {
+    console.error(e);
+  }
 
 
 
-    // Task 2: Connect to database giftDB and store in variable dbInstance
-    //{{insert code}}
+  // Task 1: Connect to MongoDB
+  // {{insert code}}
 
-    // Task 3: Return database instance
-    // {{insert code}}
+
+
+  // Task 2: Connect to database giftDB and store in variable dbInstance
+  //{{insert code}}
+
+  // Task 3: Return database instance
+  // {{insert code}}
 }
 
 export default connectToDatabase;
