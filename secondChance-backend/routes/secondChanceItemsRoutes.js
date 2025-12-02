@@ -3,7 +3,6 @@ import multer from 'multer';
 const router = express.Router();
 import connectToDatabase from '../models/db.js';
 import logger from '../logger.js';
-
 // Define the upload directory path
 const directoryPath = 'public/images';
 
@@ -37,16 +36,26 @@ router.get('/', async (req, res, next) => {
 router.post('/', upload.single('file'), async(req, res,next) => {
   try {
     let secondChanceItem = req.body;
-    const lastItem = await collection.find({}).sort({'id': -1}).limit(1).next();
 
+    const lastItem = await collection.find({}).sort({'id': -1}).limit(1).next();
     const newId = lastItem ? (parseInt(lastItem.id) + 1).toString() : '1';
 
     const dateAdded = Math.floor(new Date().getTime() / 1000);
 
+    console.log(newId);
+    console.log(req.body, req.file);
+
     secondChanceItem.dateAdded = dateAdded;
     secondChanceItem.id = newId;
+    secondChanceItem.age_years = Number((req.body.age_days/365).toFixed(1));
+    secondChanceItem.name = req.body.name;
+    secondChanceItem.category = req.body.category;
+    secondChanceItem.condition = req.body.condition;
+    secondChanceItem.description = req.body.description;
+    secondChanceItem.age_days = req.body.age_days;
+    secondChanceItem.image = `/images/${req.file.filename}`;
 
-    secondChanceItem = await collection.insertOne(secondChanceItem);
+    await collection.insertOne(secondChanceItem);
 
     const insertedDoc = await collection.findOne({id: newId});
 
