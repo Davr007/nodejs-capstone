@@ -1,0 +1,31 @@
+name: 'CI/CD'
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint_js:
+    name: Lint JavaScript Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd secondChance-backend
+          npm init -y
+          npm install eslint@8 eslint-config-standard eslint-plugin-import eslint-plugin-n eslint-plugin-promise --save-dev
+      - name: Run ESLint
+        run: |
+          cd secondChance-backend
+          # Используем конфиг из родительской папки
+          npx eslint . --ext .js --config ../.eslintrc.json
