@@ -57,7 +57,7 @@ function SearchPage() {
     const navigate = useNavigate();
 
     const goToDetailsPage = (productId) => {
-        navigate(`/app/items/${productId}`);
+        navigate(`/app/product/${productId}`);
     };
 
 

@@ -6,7 +6,6 @@ const pinoLogger = require('./logger');
 const secondChanceItemsRoutes = require('./routes/secondChanceItemsRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const authRoutes = require('./routes/authRoutes');
-const imageRoutes = require('./routes/imageRoutes');
 const connectToDatabase = require('./models/db');
 const { loadData } = require("./util/import-mongo/index")
 
@@ -36,8 +35,6 @@ app.use('/api/secondchance/items', secondChanceItemsRoutes);
 
 app.use('/api/secondchance/search', searchRoutes);
 
-app.use('/images', imageRoutes);
-
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).send('Internal Server Error');
@@ -46,6 +43,8 @@ app.use((err, req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Inside the server")
 })
+
+app.use('/images', express.static('public/images'));
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

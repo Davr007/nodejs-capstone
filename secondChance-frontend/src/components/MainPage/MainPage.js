@@ -30,7 +30,7 @@ function MainPage() {
     }, []);
 
     const goToDetailsPage = (itemId) => {
-        navigate(`/app/items/${itemId}`);
+        navigate(`/app/item/${itemId}`);
     };
 
     const handleAddItem = () => {
