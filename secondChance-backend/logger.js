@@ -1,4 +1,4 @@
-import pino from 'pino';
+const pino = require('pino');
 
 let logger;
 
@@ -7,7 +7,7 @@ if (process.env.NODE_ENV !== 'production') {
   logger = pino({
     level: 'debug',
     transport: {
-      target: 'pino-pretty',
+      target: "pino-pretty",
     },
   });
 } else {
@@ -15,4 +15,4 @@ if (process.env.NODE_ENV !== 'production') {
   logger = pino();
 }
 
-export default logger;
+module.exports = logger;

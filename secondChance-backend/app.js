@@ -1,57 +1,52 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import pinoHttp from 'pino-http';
-import path from 'path';
+/* jshint esversion: 9 */
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const pinoLogger = require('./logger');
+const secondChanceItemsRoutes = require('./routes/secondChanceItemsRoutes');
+const searchRoutes = require('./routes/searchRoutes');
+const authRoutes = require('./routes/authRoutes');
+const imageRoutes = require('./routes/imageRoutes');
+const connectToDatabase = require('./models/db');
+const { loadData } = require("./util/import-mongo/index")
 
-import logger from './logger.js';
-import connectToDatabase from './models/db.js';
-import {loadData} from './util/import-mongo/index.js';
+loadData();
 
-import secondChanceItemsRoutes from './routes/secondChanceItemsRoutes.js';
-import searchRoutes from './routes/searchRoutes.js';
-import authRoutes from './routes/authRoutes.js';
+const app = express();
+app.use("*", cors());
+const port = 3060;
 
-
-const start= () => {
-  const app = express();
-  app.use('*',cors());
-  app.use(express.json());
-  app.use(pinoHttp({ logger }));
-
-  const port = 3070;
-
-  // Connect to MongoDB; we just do this one time
-  connectToDatabase().then(() => {
-    return loadData();
-  }).then(() => {
-    logger.info('Connected to DB');
-  })
+connectToDatabase().then(() => {
+  pinoLogger.info('Connected to DB');
+})
     .catch((e) => console.error('Failed to connect to DB', e));
 
-  app.use('/images', express.static(path.join(process.cwd(), 'public/images')));
 
-  // Route files
-  app.use('/api/auth', authRoutes);
-  app.use('/api/secondchance/items', secondChanceItemsRoutes);
-  app.use('/api/secondchance/search', searchRoutes);
+app.use(express.json());
 
 
-  // Global Error Handler
-  app.use((err, req, res, next) => {
-    void next;
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  });
+const pinoHttp = require('pino-http');
+const logger = require('./logger');
 
-  app.get('/',(req,res)=>{
-    res.send('Inside the server');
-  });
+app.use(pinoHttp({ logger }));
 
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
+app.use('/api/auth', authRoutes);
 
-};
+app.use('/api/secondchance/items', secondChanceItemsRoutes);
 
-start();
+app.use('/api/secondchance/search', searchRoutes);
+
+app.use('/images', imageRoutes);
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send('Internal Server Error');
+});
+
+app.get("/", (req, res) => {
+  res.send("Inside the server")
+})
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

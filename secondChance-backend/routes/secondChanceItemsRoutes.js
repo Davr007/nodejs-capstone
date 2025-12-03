@@ -1,8 +1,9 @@
-import express from 'express';
-import multer from 'multer';
+const express = require('express');
+const multer = require('multer');
 const router = express.Router();
-import connectToDatabase from '../models/db.js';
-import logger from '../logger.js';
+const connectToDatabase = require('../models/db');
+const logger = require('../logger');
+
 // Define the upload directory path
 const directoryPath = 'public/images';
 
@@ -13,53 +14,41 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname); // Use the original file name
-  },
+  }
 });
 
 const upload = multer({ storage: storage });
-const db = await connectToDatabase();
-const collection = db.collection('secondChanceItems');
 
 // Get all secondChanceItems
 router.get('/', async (req, res, next) => {
   logger.info('/ called');
   try {
+    const db = await connectToDatabase();
+
+    const collection = db.collection("secondChanceItems");
     const secondChanceItems = await collection.find({}).toArray();
     res.json(secondChanceItems);
   } catch (e) {
-    logger.console.error('oops something went wrong', e);
+    logger.console.error('oops something went wrong', e)
     next(e);
   }
 });
 
 // Add a new item
-router.post('/', upload.single('file'), async(req, res,next) => {
+router.post('/', upload.single('file'), async (req, res, next) => {
   try {
+    const db = await connectToDatabase();
+    const collection = db.collection("secondChanceItems");
+    const lastItemQuery = await collection.find().sort({ 'id': -1 }).limit(1);
     let secondChanceItem = req.body;
-
-    const lastItem = await collection.find({}).sort({'id': -1}).limit(1).next();
-    const newId = lastItem ? (parseInt(lastItem.id) + 1).toString() : '1';
-
-    const dateAdded = Math.floor(new Date().getTime() / 1000);
-
-    console.log(newId);
-    console.log(req.body, req.file);
-
-    secondChanceItem.dateAdded = dateAdded;
-    secondChanceItem.id = newId;
-    secondChanceItem.age_years = Number((req.body.age_days/365).toFixed(1));
-    secondChanceItem.name = req.body.name;
-    secondChanceItem.category = req.body.category;
-    secondChanceItem.condition = req.body.condition;
-    secondChanceItem.description = req.body.description;
-    secondChanceItem.age_days = req.body.age_days;
-    secondChanceItem.image = `/images/${req.file.filename}`;
-
-    await collection.insertOne(secondChanceItem);
-
-    const insertedDoc = await collection.findOne({id: newId});
-
-    res.status(201).json(insertedDoc);
+    await lastItemQuery.forEach(item => {
+      secondChanceItem.id = (parseInt(item.id) + 1).toString();
+    });
+    const date_added = Math.floor(new Date().getTime() / 1000);
+    secondChanceItem.date_added = date_added
+    secondChanceItem = await collection.insertOne(secondChanceItem);
+    console.log(secondChanceItem);
+    res.status(201).json(secondChanceItem);
   } catch (e) {
     next(e);
   }
@@ -69,11 +58,13 @@ router.post('/', upload.single('file'), async(req, res,next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const secondChanceItem = await collection.findOne({id: id});
-    if(!secondChanceItem) {
-      logger.error('secondChanceItem not found');
-      return res.status(404).json({ error: 'secondChanceItem not found' });
+    const db = await connectToDatabase();
+    const collection = db.collection("secondChanceItems");
+    const secondChanceItem = await collection.findOne({ id: id });
+    if (!secondChanceItem) {
+      return res.status(404).send("secondChanceItem not found");
     }
+
     res.json(secondChanceItem);
   } catch (e) {
     next(e);
@@ -81,60 +72,56 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Update and existing item
-router.put('/:id', upload.single('file'), async(req, res,next) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const existing = await collection.findOne({id: id});
+    const db = await connectToDatabase();
+    const collection = db.collection("secondChanceItems");
+    const secondChanceItem = await collection.findOne({ id });
 
-    if(!existing) {
+    if (!secondChanceItem) {
       logger.error('secondChanceItem not found');
-      return res.status(404).json({ error: 'secondChanceItem not found' });
+      return res.status(404).json({ error: "secondChanceItem not found" });
     }
+    secondChanceItem.category = req.body.category;
+    secondChanceItem.condition = req.body.condition;
+    secondChanceItem.age_days = req.body.age_days;
+    secondChanceItem.description = req.body.description;
+    secondChanceItem.age_years = Number((secondChanceItem.age_days / 365).toFixed(1));
+    secondChanceItem.updatedAt = new Date();
 
-    const updates = {
-      category: req.body.category,
-      condition: req.body.condition,
-      description: req.body.description,
-      age_years: Number((existing.age_days/365).toFixed(1)),
-      updatedAt: Math.floor(new Date().getTime() / 1000)
-    };
-
-    if (req.file) {
-      updates.image = req.file.filename;
-    }
-
-    const updatePreLoveItem = await collection.findOneAndUpdate(
-      {id: id},
-      {$set: updates},
-      {returnDocument: 'after'}
+    const updatepreloveItem = await collection.findOneAndUpdate(
+        { id },
+        { $set: secondChanceItem },
+        { returnDocument: 'after' }
     );
-
-    if (updatePreLoveItem) {
-      res.json({'uploaded': 'success'});
+    if (updatepreloveItem) {
+      res.json({ "uploaded": "success" });
     } else {
-      res.json({'uploaded': 'failed'});
+      res.json({ "uploaded": "failed" });
     }
-
   } catch (e) {
     next(e);
   }
 });
 
 // Delete an existing item
-router.delete('/:id', async(req, res,next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const secondChanceItem = await collection.findOne({id: id});
-    if(!secondChanceItem) {
-      logger.error('secondChanceItem not found');
-      return res.status(404).json({ error: 'secondChanceItem not found' });
-    }
+    const db = await connectToDatabase();
+    const collection = db.collection("secondChanceItems");
+    const secondChanceItem = await collection.findOne({ id });
 
-    await collection.deleteOne({id: id});
-    res.json({'deleted': 'success'});
+    if (!secondChanceItem) {
+      logger.error('secondChanceItem not found');
+      return res.status(404).json({ error: "secondChanceItem not found" });
+    }
+    await collection.deleteOne({ id });
+    res.json({ "deleted": "success" });
   } catch (e) {
     next(e);
   }
 });
 
-export default router;
+module.exports = router;
